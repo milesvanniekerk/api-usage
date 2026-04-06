@@ -1,0 +1,27 @@
+name: Rebuild Dashboard
+
+on:
+  workflow_dispatch:  # Manual trigger from GitHub UI
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Fetch latest data
+        run: |
+          echo "Dashboard rebuild triggered manually"
+          echo "Data will be pulled from OpenClaw session logs"
+
+      - name: Commit placeholder
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          echo "# Dashboard updated $(date)" >> last-update.txt
+          git add last-update.txt || true
+          git commit -m "Dashboard rebuild triggered: $(date)" || true
+          git push
