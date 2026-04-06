@@ -328,17 +328,16 @@ function buildDashboard(rows) {
     }
   });
 
-  // Table - show most recent 200, sorted by date desc
+  // Table - merge all rows and sort by date desc, time desc
   if (rows.length > 0) {
-    // Separate gateway rows (daily Qwen summaries) from call rows
-    const gatewayRows = rows.filter(r => r.session === 'gateway');
-    const callRows = rows.filter(r => r.session !== 'gateway');
-    // Sort gateway rows by date desc
-    gatewayRows.sort((a, b) => b.date.localeCompare(a.date));
-    // Sort call rows by date desc, then time desc
-    callRows.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
-    // Show last 180 calls + all gateway rows
-    const recent = [...gatewayRows, ...callRows.slice(0, 180)];
+    const sorted = [...rows].sort((a, b) => {
+      // Sort by date desc first
+      const dateCmp = b.date.localeCompare(a.date);
+      if (dateCmp !== 0) return dateCmp;
+      // Then by time desc
+      return b.time.localeCompare(a.time);
+    });
+    const recent = sorted.slice(0, 200);
     document.getElementById('table-container').innerHTML = `<table>
       <thead><tr><th>When</th><th>Model</th><th>Input</th><th>Output</th><th>Cost</th><th>Session</th></tr></thead>
       <tbody>${recent.map(r => `<tr>
