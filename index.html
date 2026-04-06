@@ -350,15 +350,20 @@ function buildDashboard(rows) {
       return (b.half === 'PM' ? 0 : 1) - (a.half === 'PM' ? 0 : 1);
     });
     const recent = aggregated.slice(0, 200);
+    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     document.getElementById('table-container').innerHTML = `<table>
       <thead><tr><th>When</th><th>Model</th><th>Input</th><th>Output</th><th>Cost</th></tr></thead>
-      <tbody>${recent.map(r => `<tr>
-        <td>${r.date.slice(5)} ${r.half}</td>
+      <tbody>${recent.map(r => {
+        const m = months[parseInt(r.date.slice(5,7),10)-1];
+        const d = r.date.slice(8);
+        return `<tr>
+        <td>${m} ${d} ${r.half}</td>
         <td>${modelTag(r.model)}</td>
         <td>${fmtK(r.input)}</td>
         <td>${fmtK(r.output)}</td>
         <td>${fmt(r.cost)}</td>
-      </tr>`).join('')}</tbody>
+      </tr>`;
+      }).join('')}</tbody>
     </table>`;
   }
 }
