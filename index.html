@@ -328,25 +328,36 @@ function buildDashboard(rows) {
     }
   });
 
-  // Table - merge all rows and sort by date desc, time desc
+  // Table - aggregate by date + AM/PM + model, show totals
   if (rows.length > 0) {
-    const sorted = [...rows].sort((a, b) => {
-      // Sort by date desc first
+    const agg = {};
+    rows.forEach(r => {
+      // Determine AM or PM from time
+      const hour = parseInt(r.time.split(':')[0], 10);
+      const half = hour < 12 ? 'AM' : 'PM';
+      const key = `${r.date}|${half}|${r.model}`;
+      if (!agg[key]) {
+        agg[key] = { date: r.date, half, model: r.model, input: 0, output: 0, cost: 0 };
+      }
+      agg[key].input += r.input || 0;
+      agg[key].output += r.output || 0;
+      agg[key].cost += r.cost || 0;
+    });
+    // Convert to array and sort by date desc, then PM before AM (PM is more recent)
+    const aggregated = Object.values(agg).sort((a, b) => {
       const dateCmp = b.date.localeCompare(a.date);
       if (dateCmp !== 0) return dateCmp;
-      // Then by time desc
-      return b.time.localeCompare(a.time);
+      return (b.half === 'PM' ? 0 : 1) - (a.half === 'PM' ? 0 : 1);
     });
-    const recent = sorted.slice(0, 200);
+    const recent = aggregated.slice(0, 200);
     document.getElementById('table-container').innerHTML = `<table>
-      <thead><tr><th>When</th><th>Model</th><th>Input</th><th>Output</th><th>Cost</th><th>Session</th></tr></thead>
+      <thead><tr><th>When</th><th>Model</th><th>Input</th><th>Output</th><th>Cost</th></tr></thead>
       <tbody>${recent.map(r => `<tr>
-        <td>${fmtDate(r.date, r.time)}</td>
+        <td>${r.date.slice(5)} ${r.half}</td>
         <td>${modelTag(r.model)}</td>
         <td>${fmtK(r.input)}</td>
         <td>${fmtK(r.output)}</td>
         <td>${fmt(r.cost)}</td>
-        <td style="color:#64748b;font-size:0.8rem">${r.session}</td>
       </tr>`).join('')}</tbody>
     </table>`;
   }
